@@ -1,0 +1,45 @@
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from openpyxl import load_workbook
+
+# 1° logar no site do banco
+service = Service('/path/to/chromedriver')  # substitua pelo caminho para o driver do seu navegador
+driver = webdriver.Chrome(service=service)
+driver.get('https://www.exemplo.com')  # substitua pela URL do site do banco
+
+# 2° fazer o login
+username = driver.find_element(By.ID, 'username-input')  # substitua pelo ID ou seletor CSS do campo de usuário
+password = driver.find_element(By.ID, 'password-input')  # substitua pelo ID ou seletor CSS do campo de senha
+
+username.send_keys('seu_usuario')
+password.send_keys('sua_senha')
+password.send_keys(Keys.ENTER)
+
+# 3° pegar os dados dos clientes na planilha e preencher no site para a análise
+planilha = load_workbook('caminho/para/sua/planilha.xlsx')  # substitua pelo caminho para sua planilha
+sheet = planilha.active
+
+for row in sheet.iter_rows(min_row=2):  # comece a partir da segunda linha (assumindo que a primeira linha seja o cabeçalho)
+    cliente_nome = row[0].value  # substitua pelo índice da coluna que contém o nome do cliente
+    cliente_cpf = row[1].value  # substitua pelo índice da coluna que contém o CPF do cliente
+
+    # Preencher os campos no site para análise
+    nome_input = driver.find_element(By.ID, 'nome-input')  # substitua pelo ID ou seletor CSS do campo de nome no site
+    cpf_input = driver.find_element(By.ID, 'cpf-input')  # substitua pelo ID ou seletor CSS do campo de CPF no site
+
+    nome_input.clear()
+    nome_input.send_keys(cliente_nome)
+    cpf_input.clear()
+    cpf_input.send_keys(cliente_cpf)
+    cpf_input.send_keys(Keys.ENTER)
+
+    # 4° colocar o resultado da análise na planilha
+    resultado_analise = driver.find_element(By.ID, 'resultado-analise')  # substitua pelo ID ou seletor CSS do elemento que contém o resultado no site
+    row[2].value = resultado_analise.text  # substitua pelo índice da coluna em que você deseja colocar o resultado
+
+planilha.save('caminho/para/sua/planilha.xlsx')  # substitua pelo caminho em que você deseja salvar a planilha
+
+# Fechar o navegador
+driver.quit()
